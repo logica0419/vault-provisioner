@@ -32,7 +32,6 @@
     {
       "description": "Auto merge up to minor",
       "matchUpdateTypes": ["minor", "patch"],
-      "matchCurrentVersion": "!/^0/",
       "automerge": true
     },
     {
