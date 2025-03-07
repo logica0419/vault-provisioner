@@ -31,7 +31,7 @@ var (
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file path")
 
-	rootCmd.PersistentFlags().String("vault.name", "", "Name of the Vault StatefulSet. "+
+	rootCmd.PersistentFlags().String("vault.name", "vault", "Name of the Vault StatefulSet. "+
 		"vault-provisioner accesses the pods {vault.name}-0, {vault.name}-1, ... (default: vault)")
 	rootCmd.PersistentFlags().Int("vault.replicas", 3, "Replicas of the Vault StatefulSet (default: 3)")
 	rootCmd.PersistentFlags().String("vault.namespace", "default", "Namespace of the Vault Instance (default: default)")
