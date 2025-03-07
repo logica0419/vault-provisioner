@@ -1,0 +1,45 @@
+linters:
+  enable-all: true
+  disable:
+    - tenv # deprecated
+    - depguard
+    - dogsled
+    - gci
+    - godot
+    - nolintlint
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    - path: cmd/
+      linters:
+        - exhaustruct
+        - mnd
+        - gochecknoglobals
+        - gochecknoinits
+
+linters-settings:
+  revive:
+    rules:
+      - name: package-comments
+        disabled: true
+  stylecheck:
+    checks:
+      - all
+      - -ST1000
+  varnamelen:
+    ignore-names:
+      - tt
+      - tx
+      - id
+      - db
+      - to
+      - i
+  wrapcheck:
+    ignoreSigs:
+      - .Wrap(
+      - .Wrapf(
+      - .WithMessage(
+      - .WithMessagef(
+      - .WithStack(
+      - github.com/cockroachdb/errors.Newf(
