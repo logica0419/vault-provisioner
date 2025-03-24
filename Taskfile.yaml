@@ -1,0 +1,67 @@
+version: 3
+
+# Task definition order
+#
+# 1.
+#   desc
+#
+# 2.
+#   internal
+#   dir
+#   silent
+#
+# 3.
+#   vars
+#   status / sources / generates / methods / preconditions
+#   deps
+#
+# 4.
+#   cmds
+
+tasks:
+  check-binary:
+    desc: Check if the binary exists
+    internal: true
+    silent: true
+    cmds:
+      - |
+        if ! (type {{.BINARY}} >/dev/null 2>&1); then
+          echo "下記公式ドキュメントを参考に{{if .ALT_NAME}}{{.ALT_NAME}}{{else}}{{.BINARY}}{{end}}をインストールした後、もう一度実行してください"
+          echo {{.INSTALL_DOC}}
+          exit 1
+        fi
+
+  init:
+    desc: Initialize the workspace
+    deps:
+      - task: check-binary
+        vars:
+          BINARY: kind
+          INSTALL_DOC: https://kind.sigs.k8s.io/docs/user/quick-start/#installation
+    cmds:
+      - kubectl get nodes --request-timeout 100ms || kind create cluster --config dev/kind-config.yaml
+      - helm repo add hashicorp https://helm.releases.hashicorp.com
+      - helm install vault hashicorp/vault --values dev/vault.yaml
+      - go mod download
+
+  lint:
+    desc: Lint
+    cmds:
+      - golangci-lint run
+
+  format:
+    desc: Format
+    cmds:
+      - go mod tidy
+      - goimports -l -w .
+      - gofumpt -l -w .
+
+  build:
+    desc: Build
+    cmds:
+      - go build main.go
+
+  test:
+    desc: Test
+    cmds:
+      - go test -v ./...
