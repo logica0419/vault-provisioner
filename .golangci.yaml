@@ -7,14 +7,19 @@ linters:
     - gci
     - godot
     - nolintlint
+    - exhaustruct
+    - wrapcheck
 
 issues:
   exclude-use-default: false
   exclude-rules:
     - path: cmd/
       linters:
-        - exhaustruct
         - mnd
+        - gochecknoglobals
+        - gochecknoinits
+    - path: kube/
+      linters:
         - gochecknoglobals
         - gochecknoinits
 
@@ -35,11 +40,3 @@ linters-settings:
       - db
       - to
       - i
-  wrapcheck:
-    ignoreSigs:
-      - .Wrap(
-      - .Wrapf(
-      - .WithMessage(
-      - .WithMessagef(
-      - .WithStack(
-      - github.com/cockroachdb/errors.Newf(
