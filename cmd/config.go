@@ -6,9 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/logica0419/vault-provisioner/provisioner"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/logica0419/vault-provisioner/provisioner"
 )
 
 type Config struct {
@@ -27,8 +28,10 @@ func init() {
 
 	rootCmd.PersistentFlags().String("vault.name", "vault", "Name of the Vault StatefulSet. "+
 		"vault-provisioner accesses the pods {vault.name}-0, {vault.name}-1, ... (default: vault)")
-	rootCmd.PersistentFlags().Int("vault.replicas", 3, "Replicas of the Vault StatefulSet (default: 3)")
-	rootCmd.PersistentFlags().String("vault.namespace", "default", "Namespace of the Vault Instance (default: default)")
+	rootCmd.PersistentFlags().
+		Int("vault.replicas", 3, "Replicas of the Vault StatefulSet (default: 3)")
+	rootCmd.PersistentFlags().
+		String("vault.namespace", "default", "Namespace of the Vault Instance (default: default)")
 	rootCmd.PersistentFlags().Int("vault.port", 8080, "Port of the Vault Instance (default: 8080)")
 
 	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {

@@ -1,42 +1,53 @@
+version: "2"
+
 linters:
-  enable-all: true
+  default: all
   disable:
-    - tenv # deprecated
     - depguard
     - dogsled
-    - gci
+    - exhaustruct
     - godot
     - nolintlint
-    - exhaustruct
     - wrapcheck
 
-issues:
-  exclude-use-default: false
-  exclude-rules:
-    - path: cmd/
-      linters:
-        - mnd
-        - gochecknoglobals
-        - gochecknoinits
-    - path: kube/
-      linters:
-        - gochecknoglobals
-        - gochecknoinits
+  settings:
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+    varnamelen:
+      ignore-names:
+        - tt
+        - tx
+        - id
+        - db
+        - to
+        - i
 
-linters-settings:
-  revive:
+  exclusions:
     rules:
-      - name: package-comments
-        disabled: true
-  stylecheck:
-    checks:
-      - all
-      - -ST1000
-  varnamelen:
-    ignore-names:
-      - tt
-      - tx
-      - id
-      - db
-      - to
-      - i
+      - path: cmd/
+        linters:
+          - gochecknoglobals
+          - gochecknoinits
+          - mnd
+      - path: kube/
+        linters:
+          - gochecknoglobals
+          - gochecknoinits
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/logica0419/vault-provisioner)
+        - blank

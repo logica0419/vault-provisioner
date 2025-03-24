@@ -3,8 +3,9 @@ package cmd
 import (
 	"log/slog"
 
-	"github.com/logica0419/vault-provisioner/provisioner"
 	"github.com/spf13/cobra"
+
+	"github.com/logica0419/vault-provisioner/provisioner"
 )
 
 var runCmd = &cobra.Command{

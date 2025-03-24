@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/vault-client-go"
+
 	"github.com/logica0419/vault-provisioner/kube"
 )
 
