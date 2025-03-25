@@ -29,7 +29,8 @@ func init() {
 	rootCmd.PersistentFlags().String("vault.name", "vault",
 		"Name of the Vault StatefulSet. vault-provisioner accesses the pods {vault.name}-0, {vault.name}-1, ...")
 	rootCmd.PersistentFlags().Int("vault.replicas", 3, "Replicas of the Vault StatefulSet")
-	rootCmd.PersistentFlags().String("vault.namespace", "default", "Namespace of the Vault Instance")
+	rootCmd.PersistentFlags().String("vault.namespace", "",
+		"Namespace of the Vault Instance. When empty, the namespace where the vault-provisioner is running is used.")
 	rootCmd.PersistentFlags().Int("vault.port", 8080, "Port of the Vault Instance")
 
 	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
@@ -45,6 +46,7 @@ func init() {
 		}
 
 		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+		viper.SetEnvPrefix("VP")
 		viper.AutomaticEnv()
 
 		if err := viper.ReadInConfig(); err != nil {
