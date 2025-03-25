@@ -41,7 +41,7 @@ tasks:
     cmds:
       - kubectl get nodes --request-timeout 100ms || kind create cluster --config dev/kind-config.yaml
       - helm repo add hashicorp https://helm.releases.hashicorp.com
-      - helm install vault hashicorp/vault --values dev/vault.yaml
+      - helm upgrade --install vault hashicorp/vault -f dev/vault.yaml
       - go mod download
 
   lint:
