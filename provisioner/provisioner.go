@@ -3,6 +3,7 @@ package provisioner
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/hashicorp/vault-client-go"
@@ -25,7 +26,7 @@ type Provisioner struct {
 	vaultClients []*vault.Client
 }
 
-func New(opt VaultOption) (*Provisioner, error) {
+func New(ctx context.Context, opt VaultOption) (*Provisioner, error) {
 	if opt.Namespace == "" {
 		namespace, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 		if err != nil {
@@ -35,7 +36,7 @@ func New(opt VaultOption) (*Provisioner, error) {
 		opt.Namespace = string(namespace)
 	}
 
-	pods, err := kube.GetPods(context.Background(), opt.Namespace)
+	pods, err := kube.GetPods(ctx, opt.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -64,4 +65,17 @@ func New(opt VaultOption) (*Provisioner, error) {
 	}
 
 	return provisioner, nil
+}
+
+func (p *Provisioner) Run(ctx context.Context) error {
+	for i, client := range p.vaultClients {
+		res, err := client.System.SealStatus(ctx)
+		if err != nil {
+			return err
+		}
+
+		slog.Info(fmt.Sprintf("client-%d", i), "initialized", res.Data.Initialized, "sealed", res.Data.Sealed)
+	}
+
+	return nil
 }

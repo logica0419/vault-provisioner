@@ -12,9 +12,13 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run the provisioner",
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := provisioner.New(config.Vault)
+		p, err := provisioner.New(cmd.Context(), config.Vault)
 		if err != nil {
 			slog.Error("failed to create provisioner", "error", err)
+		}
+
+		if err := p.Run(cmd.Context()); err != nil {
+			slog.Error("failed to run provisioner", "error", err)
 		}
 	},
 }
