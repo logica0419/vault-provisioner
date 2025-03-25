@@ -52,7 +52,7 @@ func New(ctx context.Context, opt VaultOption) (*Provisioner, error) {
 		}
 
 		client, err := vault.New(
-			vault.WithAddress(podIP+":8200"),
+			vault.WithAddress("http://"+podIP+":8200"),
 			vault.WithTLS(vault.TLSConfiguration{
 				InsecureSkipVerify: true,
 			}),
