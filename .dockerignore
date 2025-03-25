@@ -1,0 +1,9 @@
+.github
+.vscode
+
+dev
+
+.gitignore
+.golangci.yaml
+Dockerfile
+Taskfile.yaml

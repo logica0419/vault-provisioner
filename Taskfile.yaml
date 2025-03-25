@@ -58,7 +58,16 @@ tasks:
   build:
     desc: Build
     cmds:
-      - go build main.go
+      - docker build -t vault-provisioner:latest .
+
+  run:
+    desc: Run
+    deps:
+      - task: build
+    cmds:
+      - kind load docker-image vault-provisioner:latest
+      - kubectl delete --ignore-not-found -f dev/manifest.yaml
+      - kubectl apply -f dev/manifest.yaml
 
   test:
     desc: Test

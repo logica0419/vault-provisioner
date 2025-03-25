@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-provisioner
+spec:
+  template:
+    spec:
+      containers:
+        - name: vault-provisioner
+          image: vault-provisioner:latest
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Never
+  backoffLimit: 1
