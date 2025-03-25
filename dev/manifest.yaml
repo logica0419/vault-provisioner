@@ -10,4 +10,4 @@ spec:
           image: vault-provisioner:latest
           imagePullPolicy: IfNotPresent
       restartPolicy: Never
-  backoffLimit: 1
+  backoffLimit: 0
