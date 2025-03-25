@@ -53,8 +53,7 @@ tasks:
     desc: Format
     cmds:
       - go mod tidy
-      - goimports -l -w .
-      - gofumpt -l -w .
+      - golangci-lint fmt
 
   build:
     desc: Build
