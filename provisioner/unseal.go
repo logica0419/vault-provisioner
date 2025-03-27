@@ -8,8 +8,12 @@ import (
 )
 
 type UnsealOption struct {
-	// Enabled is the flag to enable the unseal process
+	// Enables the unseal process
 	Enabled bool `json:"enabled" mapstructure:"enabled" yaml:"enabled"`
+	// Number of key shares to split the generated master key into
+	Share int32 `json:"share" mapstructure:"share" yaml:"share"`
+	// Number of key shares to split the generated master key into
+	Threshold int32 `json:"threshold" mapstructure:"threshold" yaml:"threshold"`
 }
 
 func (p *Provisioner) Unseal(ctx context.Context) error {
@@ -25,14 +29,15 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 		if res.Data.Initialized {
 			initialized = true
 		}
+
 		sealedStatus[i] = res.Data.Sealed
 	}
 
 	if !initialized {
 		res, err := p.vaultClients[0].System.Initialize(ctx, schema.InitializeRequest{
-			SecretShares:    5,
-			SecretThreshold: 3,
-			StoredShares:    5,
+			SecretShares:    p.unsealOpt.Share,
+			SecretThreshold: p.unsealOpt.Threshold,
+			StoredShares:    p.unsealOpt.Share,
 		})
 		if err != nil {
 			return err

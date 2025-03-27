@@ -35,11 +35,14 @@ func init() {
 		"Namespace of the Vault Instance. When empty, the namespace where the vault-provisioner is running is used.")
 	rootCmd.PersistentFlags().Int("vault.port", 8080, "Port of the Vault Instance")
 
-	rootCmd.PersistentFlags().String("provisionings.unseal.enabled", "true", "Enables the unseal process")
+	rootCmd.PersistentFlags().Bool("provisionings.unseal.enabled", true, "Enables the unseal process")
+	rootCmd.PersistentFlags().Int("provisionings.unseal.share", 5,
+		"Number of key shares to split the generated master key into")
+	rootCmd.PersistentFlags().Int("provisionings.unseal.threshold", 3,
+		"Number of key shares to split the generated master key into")
 
+	// Priority: flag > env > config_file
 	cobra.OnInitialize(func() {
-		// Priority: flag > env > config_file
-
 		if len(configFile) > 0 {
 			viper.SetConfigFile(configFile)
 		} else {
