@@ -3,7 +3,6 @@ package provisioner
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/hashicorp/vault-client-go"
@@ -24,9 +23,11 @@ type VaultOption struct {
 
 type Provisioner struct {
 	vaultClients []*vault.Client
+
+	unsealOpt UnsealOption
 }
 
-func New(ctx context.Context, opt VaultOption) (*Provisioner, error) {
+func New(ctx context.Context, opt VaultOption, unsealOpt UnsealOption) (*Provisioner, error) {
 	if opt.Namespace == "" {
 		namespace, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 		if err != nil {
@@ -43,6 +44,8 @@ func New(ctx context.Context, opt VaultOption) (*Provisioner, error) {
 
 	provisioner := &Provisioner{
 		vaultClients: make([]*vault.Client, opt.Replicas),
+
+		unsealOpt: unsealOpt,
 	}
 
 	for i := range opt.Replicas {
@@ -68,13 +71,10 @@ func New(ctx context.Context, opt VaultOption) (*Provisioner, error) {
 }
 
 func (p *Provisioner) Run(ctx context.Context) error {
-	for i, client := range p.vaultClients {
-		res, err := client.System.SealStatus(ctx)
-		if err != nil {
+	if p.unsealOpt.Enabled {
+		if err := p.Unseal(ctx); err != nil {
 			return err
 		}
-
-		slog.Info(fmt.Sprintf("client-%d", i), "initialized", res.Data.Initialized, "sealed", res.Data.Sealed)
 	}
 
 	return nil

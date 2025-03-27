@@ -15,7 +15,9 @@ import (
 type Config struct {
 	Vault provisioner.VaultOption `json:"vault" mapstructure:"vault" yaml:"vault"`
 
-	Provisionings struct{} `json:"provisionings" mapstructure:"provisionings" yaml:"provisionings"`
+	Provisionings struct {
+		Unseal provisioner.UnsealOption `json:"unseal" mapstructure:"unseal" yaml:"unseal"`
+	} `json:"provisionings" mapstructure:"provisionings" yaml:"provisionings"`
 }
 
 var (
@@ -32,6 +34,8 @@ func init() {
 	rootCmd.PersistentFlags().String("vault.namespace", "",
 		"Namespace of the Vault Instance. When empty, the namespace where the vault-provisioner is running is used.")
 	rootCmd.PersistentFlags().Int("vault.port", 8080, "Port of the Vault Instance")
+
+	rootCmd.PersistentFlags().String("provisionings.unseal.enabled", "true", "Enables the unseal process")
 
 	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
 		log.Panic(err)
