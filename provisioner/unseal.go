@@ -2,8 +2,9 @@ package provisioner
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
+
+	"github.com/hashicorp/vault-client-go/schema"
 )
 
 type UnsealOption struct {
@@ -12,13 +13,32 @@ type UnsealOption struct {
 }
 
 func (p *Provisioner) Unseal(ctx context.Context) error {
+	initialized := false
+	sealedStatus := make([]bool, len(p.vaultClients))
+
 	for i, client := range p.vaultClients {
 		res, err := client.System.SealStatus(ctx)
 		if err != nil {
 			return err
 		}
 
-		slog.Info(fmt.Sprintf("client-%d", i), "initialized", res.Data.Initialized, "sealed", res.Data.Sealed)
+		if res.Data.Initialized {
+			initialized = true
+		}
+		sealedStatus[i] = res.Data.Sealed
+	}
+
+	if !initialized {
+		res, err := p.vaultClients[0].System.Initialize(ctx, schema.InitializeRequest{
+			SecretShares:    5,
+			SecretThreshold: 3,
+			StoredShares:    5,
+		})
+		if err != nil {
+			return err
+		}
+
+		slog.Info("Vault initialized", slog.Any("response", res.Data))
 	}
 
 	return nil
