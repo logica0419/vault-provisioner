@@ -11,6 +11,8 @@ linters:
     - wrapcheck
 
   settings:
+    cyclop:
+      max-complexity: 15
     revive:
       rules:
         - name: package-comments

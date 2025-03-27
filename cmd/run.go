@@ -17,13 +17,9 @@ func setupStorage() (storage.KeyStorage, error) {
 		err error
 	)
 
-	switch config.Storage.Type {
-	case "secret":
-	default:
-		str, err = secret.NewStorage(config.Storage.Secret)
-		if err != nil {
-			return nil, err
-		}
+	str, err = secret.NewStorage(config.Storage.Secret)
+	if err != nil {
+		return nil, err
 	}
 
 	return str, err

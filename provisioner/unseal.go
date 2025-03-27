@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/hashicorp/vault-client-go/schema"
 )
@@ -23,26 +24,59 @@ const (
 	rootTokenKey = "root_token"
 )
 
-var errInvalidType = errors.New("invalid type")
-
-func (p *Provisioner) Unseal(ctx context.Context) error {
-	initialized := false
+func (p *Provisioner) getSealStatus(ctx context.Context) ([]bool, []bool, error) {
+	initializedStatus := make([]bool, len(p.vaultClients))
 	sealedStatus := make([]bool, len(p.vaultClients))
 
 	for i, client := range p.vaultClients {
 		res, err := client.System.SealStatus(ctx)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 
-		if res.Data.Initialized {
-			initialized = true
-		}
-
+		initializedStatus[i] = res.Data.Initialized
 		sealedStatus[i] = res.Data.Sealed
 	}
 
-	if !initialized {
+	slog.Info("Retrieved seal status", slog.Any("initialized", initializedStatus), slog.Any("sealed_status", sealedStatus))
+
+	return initializedStatus, sealedStatus, nil
+}
+
+var errInvalidType = errors.New("invalid type")
+
+func retrieveData(data map[string]any) (string, []string, error) {
+	keysAny, ok := data[keysKey].([]any)
+	if !ok {
+		return "", nil, fmt.Errorf("%w: keys", errInvalidType)
+	}
+
+	keys := make([]string, len(keysAny))
+
+	for i, keyAny := range keysAny {
+		key, ok := keyAny.(string)
+		if !ok {
+			return "", nil, fmt.Errorf("%w: key", errInvalidType)
+		}
+
+		keys[i] = key
+	}
+
+	rootToken, ok := data[rootTokenKey].(string)
+	if !ok {
+		return "", nil, fmt.Errorf("%w: root_token", errInvalidType)
+	}
+
+	return rootToken, keys, nil
+}
+
+func (p *Provisioner) Unseal(ctx context.Context) error {
+	initializedStatus, sealedStatus, err := p.getSealStatus(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !slices.Contains(initializedStatus, true) {
 		res, err := p.vaultClients[0].System.Initialize(ctx, schema.InitializeRequest{
 			SecretShares:    p.unsealOpt.Share,
 			SecretThreshold: p.unsealOpt.Threshold,
@@ -54,28 +88,45 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 
 		slog.Info("Initialized Vault")
 
-		keysAny, ok := res.Data[keysKey].([]any)
-		if !ok {
-			return fmt.Errorf("%w: keys", errInvalidType)
+		rootToken, keys, err := retrieveData(res.Data)
+		if err != nil {
+			return err
 		}
 
-		keys := make([]string, len(keysAny))
+		initializedStatus[0] = true
+		sealedStatus[0] = false
 
-		for i, keyAny := range keysAny {
-			key, ok := keyAny.(string)
-			if !ok {
-				return fmt.Errorf("%w: key", errInvalidType)
+		err = p.keyStorage.Store(ctx, rootToken, keys)
+		if err != nil {
+			return err
+		}
+	}
+
+	rootToken, keys, err := p.keyStorage.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = p.Authenticate(rootToken)
+	if err != nil {
+		return err
+	}
+
+	for i, client := range p.vaultClients {
+		if !sealedStatus[i] {
+			continue
+		}
+
+		for _, key := range keys {
+			res, err := client.System.Unseal(ctx, schema.UnsealRequest{Key: key})
+			if err != nil {
+				return err
 			}
 
-			keys[i] = key
+			if !res.Data.Sealed {
+				break
+			}
 		}
-
-		rootToken, ok := res.Data[rootTokenKey].(string)
-		if !ok {
-			return fmt.Errorf("%w: root_token", errInvalidType)
-		}
-
-		slog.Info("info", "Root token: ", rootToken, " Keys: ", keys)
 	}
 
 	return nil

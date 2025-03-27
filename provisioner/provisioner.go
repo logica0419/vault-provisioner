@@ -47,6 +47,7 @@ func New(
 
 	provisioner := &Provisioner{
 		vaultClients: make([]*vault.Client, opt.Replicas),
+		keyStorage:   keyStorage,
 
 		unsealOpt: unsealOpt,
 	}
@@ -82,6 +83,16 @@ func (p *Provisioner) Run(ctx context.Context) error {
 		}
 
 		slog.Info("Unseal process completed")
+	}
+
+	return nil
+}
+
+func (p *Provisioner) Authenticate(token string) error {
+	for _, client := range p.vaultClients {
+		if err := client.SetToken(token); err != nil {
+			return err
+		}
 	}
 
 	return nil
