@@ -3,6 +3,7 @@ package provisioner
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/hashicorp/vault-client-go"
@@ -72,9 +73,13 @@ func New(ctx context.Context, opt VaultOption, unsealOpt UnsealOption) (*Provisi
 
 func (p *Provisioner) Run(ctx context.Context) error {
 	if p.unsealOpt.Enabled {
+		slog.Info("Starting unseal process")
+
 		if err := p.Unseal(ctx); err != nil {
 			return err
 		}
+
+		slog.Info("Unseal process completed")
 	}
 
 	return nil

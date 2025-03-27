@@ -2,6 +2,8 @@ package provisioner
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/hashicorp/vault-client-go/schema"
@@ -15,6 +17,13 @@ type UnsealOption struct {
 	// Number of key shares to split the generated master key into
 	Threshold int32 `json:"threshold" mapstructure:"threshold" yaml:"threshold"`
 }
+
+const (
+	keysKey      = "keys"
+	rootTokenKey = "root_token"
+)
+
+var errInvalidType = errors.New("invalid type")
 
 func (p *Provisioner) Unseal(ctx context.Context) error {
 	initialized := false
@@ -43,7 +52,29 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 			return err
 		}
 
-		slog.Info("Vault initialized", slog.Any("response", res.Data))
+		slog.Info("Initialized Vault")
+
+		keysAny, ok := res.Data[keysKey].([]any)
+		if !ok {
+			return fmt.Errorf("%w: keys", errInvalidType)
+		}
+
+		keys := make([]string, len(keysAny))
+		for i, keyAny := range keysAny {
+			key, ok := keyAny.(string)
+			if !ok {
+				return fmt.Errorf("%w: key", errInvalidType)
+			}
+
+			keys[i] = key
+		}
+
+		rootToken, ok := res.Data[rootTokenKey].(string)
+		if !ok {
+			return fmt.Errorf("%w: root_token", errInvalidType)
+		}
+
+		slog.Info("info", "Root token: ", rootToken, " Keys: ", keys)
 	}
 
 	return nil

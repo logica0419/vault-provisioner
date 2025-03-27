@@ -22,6 +22,7 @@ linters:
     varnamelen:
       ignore-names:
         - tt
+        - ok
         - tx
         - id
         - db
