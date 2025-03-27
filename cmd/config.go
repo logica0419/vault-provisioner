@@ -37,11 +37,9 @@ func init() {
 
 	rootCmd.PersistentFlags().String("provisionings.unseal.enabled", "true", "Enables the unseal process")
 
-	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
-		log.Panic(err)
-	}
-
 	cobra.OnInitialize(func() {
+		// Priority: flag > env > config_file
+
 		if len(configFile) > 0 {
 			viper.SetConfigFile(configFile)
 		} else {
@@ -49,14 +47,18 @@ func init() {
 			viper.SetConfigName("config")
 		}
 
-		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-		viper.SetEnvPrefix("VP")
-		viper.AutomaticEnv()
-
 		if err := viper.ReadInConfig(); err != nil {
 			if errors.Is(err, viper.ConfigFileNotFoundError{}) {
 				log.Panic(err)
 			}
+		}
+
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+		viper.SetEnvPrefix("VP")
+		viper.AutomaticEnv()
+
+		if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
+			log.Panic(err)
 		}
 
 		if err := viper.Unmarshal(&config); err != nil {
