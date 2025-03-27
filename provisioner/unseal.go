@@ -60,6 +60,7 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 		}
 
 		keys := make([]string, len(keysAny))
+
 		for i, keyAny := range keysAny {
 			key, ok := keyAny.(string)
 			if !ok {
