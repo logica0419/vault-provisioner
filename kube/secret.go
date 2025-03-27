@@ -18,18 +18,20 @@ func GetSecret(ctx context.Context, name, namespace string) (*coreV1.Secret, err
 }
 
 func ApplySecret(ctx context.Context, secret *coreV1.Secret) error {
-	_, err := clientSet.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metaV1.GetOptions{})
+	client := clientSet.CoreV1().Secrets(secret.Namespace)
+
+	_, err := client.Get(ctx, secret.Name, metaV1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	if err != nil {
-		_, err = clientSet.CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metaV1.CreateOptions{})
+		_, err = client.Create(ctx, secret, metaV1.CreateOptions{})
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err = clientSet.CoreV1().Secrets(secret.Namespace).Update(ctx, secret, metaV1.UpdateOptions{})
+		_, err = client.Update(ctx, secret, metaV1.UpdateOptions{})
 		if err != nil {
 			return err
 		}

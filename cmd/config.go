@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/logica0419/vault-provisioner/provisioner"
+	"github.com/logica0419/vault-provisioner/storage/secret"
 )
 
 type Config struct {
@@ -18,6 +19,12 @@ type Config struct {
 	Provisionings struct {
 		Unseal provisioner.UnsealOption `json:"unseal" mapstructure:"unseal" yaml:"unseal"`
 	} `json:"provisionings" mapstructure:"provisionings" yaml:"provisionings"`
+
+	Storage struct {
+		Type string `json:"type" mapstructure:"type" yaml:"type"`
+
+		Secret secret.Option `json:"secret" mapstructure:"secret" yaml:"secret"`
+	} `json:"storage" mapstructure:"storage" yaml:"storage"`
 }
 
 var (
@@ -40,6 +47,11 @@ func init() {
 		"Number of key shares to split the generated master key into")
 	rootCmd.PersistentFlags().Int("provisionings.unseal.threshold", 3,
 		"Number of key shares to split the generated master key into")
+
+	rootCmd.PersistentFlags().String("storage.type", "secret", "Type of the storage. Options: secret")
+	rootCmd.PersistentFlags().String("storage.secret.name", "vault-provisioner", "Kubernetes Secret name")
+	rootCmd.PersistentFlags().String("storage.secret.namespace", "",
+		"Kubernetes Secret namespace. When empty, the namespace where the vault-provisioner is running is used.")
 
 	// Priority: flag > env > config_file
 	cobra.OnInitialize(func() {

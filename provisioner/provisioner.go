@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/hashicorp/vault-client-go"
 
 	"github.com/logica0419/vault-provisioner/kube"
+	"github.com/logica0419/vault-provisioner/storage"
 )
 
 type VaultOption struct {
@@ -24,18 +24,20 @@ type VaultOption struct {
 
 type Provisioner struct {
 	vaultClients []*vault.Client
+	keyStorage   storage.KeyStorage
 
 	unsealOpt UnsealOption
 }
 
-func New(ctx context.Context, opt VaultOption, unsealOpt UnsealOption) (*Provisioner, error) {
-	if opt.Namespace == "" {
-		namespace, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
-		if err != nil {
-			return nil, err
-		}
+func New(
+	ctx context.Context, keyStorage storage.KeyStorage,
+	opt VaultOption, unsealOpt UnsealOption,
+) (*Provisioner, error) {
+	var err error
 
-		opt.Namespace = string(namespace)
+	opt.Namespace, err = kube.GetNamespaceIfEmpty(opt.Namespace)
+	if err != nil {
+		return nil, err
 	}
 
 	pods, err := kube.GetPods(ctx, opt.Namespace)
