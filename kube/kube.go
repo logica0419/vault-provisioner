@@ -26,7 +26,7 @@ func init() {
 }
 
 func GetNamespaceIfEmpty(namespace string) (string, error) {
-	if namespace == "" {
+	if namespace != "" {
 		return namespace, nil
 	}
 
