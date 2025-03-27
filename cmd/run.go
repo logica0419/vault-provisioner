@@ -38,15 +38,18 @@ var runCmd = &cobra.Command{
 		str, err := setupStorage()
 		if err != nil {
 			slog.Error("failed to setup storage", "error", err)
+			panic(err)
 		}
 
 		p, err := provisioner.New(cmd.Context(), str, config.Vault, config.Provisionings.Unseal)
 		if err != nil {
 			slog.Error("failed to create provisioner", "error", err)
+			panic(err)
 		}
 
 		if err := p.Run(cmd.Context()); err != nil {
 			slog.Error("failed to run provisioner", "error", err)
+			panic(err)
 		}
 	},
 }
