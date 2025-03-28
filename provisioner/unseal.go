@@ -23,6 +23,12 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 		return err
 	}
 
+	if !slices.Contains(sealedStatus, true) {
+		slog.Info("Vault is already unsealed")
+
+		return nil
+	}
+
 	if !slices.Contains(initializedStatus, true) {
 		res, err := p.vaultClients[0].Sys().InitWithContext(ctx, &vault.InitRequest{
 			SecretShares:    p.unsealOpt.Share,
