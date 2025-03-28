@@ -41,7 +41,7 @@ func init() {
 	rootCmd.PersistentFlags().Int("vault.replicas", 3, "Replicas of the Vault StatefulSet")
 	rootCmd.PersistentFlags().String("vault.namespace", "",
 		"Namespace of the Vault Instance. When empty, the namespace where the vault-provisioner is running is used.")
-	rootCmd.PersistentFlags().Int("vault.port", 8080, "Port of the Vault Instance")
+	rootCmd.PersistentFlags().Int("vault.port", 8200, "Port of the Vault Instance")
 
 	rootCmd.PersistentFlags().Bool("provisionings.unseal.enabled", true, "Enables the unseal process")
 	rootCmd.PersistentFlags().Int("provisionings.unseal.share", 5,
