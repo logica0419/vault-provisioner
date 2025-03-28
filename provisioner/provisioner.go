@@ -2,10 +2,14 @@ package provisioner
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
+	"strconv"
 
-	"github.com/hashicorp/vault-client-go"
+	vault "github.com/hashicorp/vault/api"
 
 	"github.com/logica0419/vault-provisioner/kube"
 	"github.com/logica0419/vault-provisioner/storage"
@@ -58,12 +62,14 @@ func New(
 			return nil, err
 		}
 
-		client, err := vault.New(
-			vault.WithAddress("http://"+podIP+":8200"),
-			vault.WithTLS(vault.TLSConfiguration{
-				InsecureSkipVerify: true,
-			}),
-		)
+		client, err := vault.NewClient(&vault.Config{
+			Address: "http://" + net.JoinHostPort(podIP, strconv.Itoa(opt.Port)),
+			HttpClient: &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+				},
+			},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -88,12 +94,8 @@ func (p *Provisioner) Run(ctx context.Context) error {
 	return nil
 }
 
-func (p *Provisioner) Authenticate(token string) error {
+func (p *Provisioner) Authenticate(token string) {
 	for _, client := range p.vaultClients {
-		if err := client.SetToken(token); err != nil {
-			return err
-		}
+		client.SetToken(token)
 	}
-
-	return nil
 }

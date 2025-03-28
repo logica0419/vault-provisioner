@@ -2,72 +2,38 @@ package provisioner
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log/slog"
 	"slices"
 
-	"github.com/hashicorp/vault-client-go/schema"
+	vault "github.com/hashicorp/vault/api"
 )
 
 type UnsealOption struct {
 	// Enables the unseal process
 	Enabled bool `json:"enabled" mapstructure:"enabled" yaml:"enabled"`
 	// Number of key shares to split the generated master key into
-	Share int32 `json:"share" mapstructure:"share" yaml:"share"`
+	Share int `json:"share" mapstructure:"share" yaml:"share"`
 	// Number of key shares to split the generated master key into
-	Threshold int32 `json:"threshold" mapstructure:"threshold" yaml:"threshold"`
+	Threshold int `json:"threshold" mapstructure:"threshold" yaml:"threshold"`
 }
-
-const (
-	keysKey      = "keys"
-	rootTokenKey = "root_token"
-)
 
 func (p *Provisioner) getSealStatus(ctx context.Context) ([]bool, []bool, error) {
 	initializedStatus := make([]bool, len(p.vaultClients))
 	sealedStatus := make([]bool, len(p.vaultClients))
 
 	for i, client := range p.vaultClients {
-		res, err := client.System.SealStatus(ctx)
+		res, err := client.Sys().SealStatusWithContext(ctx)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		initializedStatus[i] = res.Data.Initialized
-		sealedStatus[i] = res.Data.Sealed
+		initializedStatus[i] = res.Initialized
+		sealedStatus[i] = res.Sealed
 	}
 
 	slog.Info("Retrieved seal status", slog.Any("initialized", initializedStatus), slog.Any("sealed_status", sealedStatus))
 
 	return initializedStatus, sealedStatus, nil
-}
-
-var errInvalidType = errors.New("invalid type")
-
-func retrieveData(data map[string]any) (string, []string, error) {
-	keysAny, ok := data[keysKey].([]any)
-	if !ok {
-		return "", nil, fmt.Errorf("%w: keys", errInvalidType)
-	}
-
-	keys := make([]string, len(keysAny))
-
-	for i, keyAny := range keysAny {
-		key, ok := keyAny.(string)
-		if !ok {
-			return "", nil, fmt.Errorf("%w: key", errInvalidType)
-		}
-
-		keys[i] = key
-	}
-
-	rootToken, ok := data[rootTokenKey].(string)
-	if !ok {
-		return "", nil, fmt.Errorf("%w: root_token", errInvalidType)
-	}
-
-	return rootToken, keys, nil
 }
 
 func (p *Provisioner) Unseal(ctx context.Context) error {
@@ -77,7 +43,7 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 	}
 
 	if !slices.Contains(initializedStatus, true) {
-		res, err := p.vaultClients[0].System.Initialize(ctx, schema.InitializeRequest{
+		res, err := p.vaultClients[0].Sys().InitWithContext(ctx, &vault.InitRequest{
 			SecretShares:    p.unsealOpt.Share,
 			SecretThreshold: p.unsealOpt.Threshold,
 			StoredShares:    p.unsealOpt.Share,
@@ -88,15 +54,10 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 
 		slog.Info("Initialized Vault")
 
-		rootToken, keys, err := retrieveData(res.Data)
-		if err != nil {
-			return err
-		}
-
 		initializedStatus[0] = true
 		sealedStatus[0] = false
 
-		err = p.keyStorage.Store(ctx, rootToken, keys)
+		err = p.keyStorage.Store(ctx, res.RootToken, res.Keys)
 		if err != nil {
 			return err
 		}
@@ -107,10 +68,7 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 		return err
 	}
 
-	err = p.Authenticate(rootToken)
-	if err != nil {
-		return err
-	}
+	p.Authenticate(rootToken)
 
 	for i, client := range p.vaultClients {
 		if !sealedStatus[i] {
@@ -118,12 +76,12 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 		}
 
 		for _, key := range keys {
-			res, err := client.System.Unseal(ctx, schema.UnsealRequest{Key: key})
+			res, err := client.Sys().UnsealWithContext(ctx, key)
 			if err != nil {
 				return err
 			}
 
-			if !res.Data.Sealed {
+			if !res.Sealed {
 				break
 			}
 		}
