@@ -18,6 +18,8 @@ import (
 type VaultOption struct {
 	// Name of the Vault StatefulSet
 	Name string `json:"name" mapstructure:"name" yaml:"name"`
+	// Service name of the Vault StatefulSet
+	ServiceName string `json:"serviceName" mapstructure:"serviceName" yaml:"serviceName"`
 	// Replicas of the Vault StatefulSet
 	Replicas int `json:"replicas" mapstructure:"replicas" yaml:"replicas"`
 	// Namespace of the Vault Instance
@@ -44,11 +46,6 @@ func New(
 		return nil, err
 	}
 
-	pods, err := kube.GetPods(ctx, opt.Namespace)
-	if err != nil {
-		return nil, err
-	}
-
 	provisioner := &Provisioner{
 		vaultClients: make([]*vault.Client, opt.Replicas),
 		keyStorage:   keyStorage,
@@ -57,13 +54,10 @@ func New(
 	}
 
 	for i := range opt.Replicas {
-		podIP, err := kube.GetPodIP(fmt.Sprintf("%s-%d", opt.Name, i), pods)
-		if err != nil {
-			return nil, err
-		}
+		podDNS := fmt.Sprintf("%s-%d.%s.%s.svc.cluster.local", opt.Name, i, opt.ServiceName, opt.Namespace)
 
 		client, err := vault.NewClient(&vault.Config{
-			Address: "http://" + net.JoinHostPort(podIP, strconv.Itoa(opt.Port)),
+			Address: "http://" + net.JoinHostPort(podDNS, strconv.Itoa(opt.Port)),
 			HttpClient: &http.Client{
 				Transport: &http.Transport{
 					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec

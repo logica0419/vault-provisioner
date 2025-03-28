@@ -37,6 +37,7 @@ func init() {
 
 	rootCmd.PersistentFlags().String("vault.name", "vault",
 		"Name of the Vault StatefulSet. vault-provisioner accesses the pods {vault.name}-0, {vault.name}-1, ...")
+	rootCmd.PersistentFlags().String("vault.serviceName", "vault-internal", "`serviceName` of the Vault StatefulSet.")
 	rootCmd.PersistentFlags().Int("vault.replicas", 3, "Replicas of the Vault StatefulSet")
 	rootCmd.PersistentFlags().String("vault.namespace", "",
 		"Namespace of the Vault Instance. When empty, the namespace where the vault-provisioner is running is used.")
