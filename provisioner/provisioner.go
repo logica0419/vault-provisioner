@@ -3,11 +3,8 @@ package provisioner
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
-	"strconv"
 
 	vault "github.com/hashicorp/vault/api"
 
@@ -54,10 +51,8 @@ func New(
 	}
 
 	for i := range opt.Replicas {
-		podDNS := fmt.Sprintf("%s-%d.%s.%s.svc.cluster.local", opt.Name, i, opt.ServiceName, opt.Namespace)
-
 		client, err := vault.NewClient(&vault.Config{
-			Address: "http://" + net.JoinHostPort(podDNS, strconv.Itoa(opt.Port)),
+			Address: kube.GetStatefulSetPodURL(opt.Name, i, opt.ServiceName, opt.Namespace, opt.Port),
 			HttpClient: &http.Client{
 				Transport: &http.Transport{
 					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
