@@ -3,7 +3,6 @@ package secret
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/bytedance/sonic"
 	coreV1 "k8s.io/api/core/v1"
@@ -52,21 +51,11 @@ func (s *Storage) Get(ctx context.Context) (string, []string, error) {
 		return "", nil, err
 	}
 
-	dst, err := base64.StdEncoding.DecodeString(string(secret.Data[rootTokenKey]))
-	if err != nil {
-		return "", nil, err
-	}
-
-	rootToken := string(dst)
-
-	dst, err = base64.StdEncoding.DecodeString(string(secret.Data[keysKey]))
-	if err != nil {
-		return "", nil, err
-	}
+	rootToken := string(secret.Data[rootTokenKey])
 
 	keys := make([]string, 0)
 
-	err = sonic.Unmarshal(dst, &keys)
+	err = sonic.Unmarshal(secret.Data[keysKey], &keys)
 	if err != nil {
 		return "", nil, err
 	}
@@ -85,9 +74,9 @@ func (s *Storage) Store(ctx context.Context, rootToken string, keys []string) er
 			Name:      s.name,
 			Namespace: s.namespace,
 		},
-		Data: map[string][]byte{
-			rootTokenKey: []byte(base64.StdEncoding.EncodeToString([]byte(rootToken))),
-			keysKey:      []byte(base64.StdEncoding.EncodeToString(keysByte)),
+		StringData: map[string]string{
+			rootTokenKey: rootToken,
+			keysKey:      string(keysByte),
 		},
 	}
 
