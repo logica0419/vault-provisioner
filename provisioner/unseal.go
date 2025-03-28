@@ -36,6 +36,54 @@ func (p *Provisioner) getSealStatus(ctx context.Context) ([]bool, []bool, error)
 	return initializedStatus, sealedStatus, nil
 }
 
+func (p *Provisioner) joinAllInstances(ctx context.Context, initializedStatus []bool) error {
+	for i, client := range p.vaultClients {
+		if initializedStatus[i] {
+			continue
+		}
+
+		var leaderAddr string
+
+		for i, initialized := range initializedStatus {
+			if initialized {
+				leaderAddr = p.vaultClients[i].Address()
+
+				break
+			}
+		}
+
+		_, err := client.Sys().RaftJoinWithContext(ctx, &vault.RaftJoinRequest{
+			LeaderAPIAddr: leaderAddr,
+		})
+		if err != nil {
+			return err
+		}
+
+		slog.Info("Joined Vault", slog.Int("instance", i))
+
+		initializedStatus[i] = true
+	}
+
+	return nil
+}
+
+func (p *Provisioner) unsealSingleInstance(ctx context.Context, idx int, keys []string) error {
+	for _, key := range keys {
+		res, err := p.vaultClients[idx].Sys().UnsealWithContext(ctx, key)
+		if err != nil {
+			return err
+		}
+
+		if !res.Sealed {
+			break
+		}
+	}
+
+	slog.Info("Unsealed Vault", slog.Int("instance", idx))
+
+	return nil
+}
+
 func (p *Provisioner) Unseal(ctx context.Context) error {
 	initializedStatus, sealedStatus, err := p.getSealStatus(ctx)
 	if err != nil {
@@ -52,10 +100,9 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 			return err
 		}
 
-		slog.Info("Initialized Vault")
+		slog.Info("Initialized Vault", slog.Int("instance", 0))
 
 		initializedStatus[0] = true
-		sealedStatus[0] = false
 
 		err = p.keyStorage.Store(ctx, res.RootToken, res.Keys)
 		if err != nil {
@@ -68,22 +115,30 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 		return err
 	}
 
-	p.Authenticate(rootToken)
+	if initializedStatus[0] && sealedStatus[0] {
+		err = p.unsealSingleInstance(ctx, 0, keys)
+		if err != nil {
+			return err
+		}
 
-	for i, client := range p.vaultClients {
+		sealedStatus[0] = false
+	}
+
+	err = p.joinAllInstances(ctx, initializedStatus)
+	if err != nil {
+		return err
+	}
+
+	p.authenticate(rootToken)
+
+	for i := range p.vaultClients {
 		if !sealedStatus[i] {
 			continue
 		}
 
-		for _, key := range keys {
-			res, err := client.Sys().UnsealWithContext(ctx, key)
-			if err != nil {
-				return err
-			}
-
-			if !res.Sealed {
-				break
-			}
+		err = p.unsealSingleInstance(ctx, i, keys)
+		if err != nil {
+			return err
 		}
 	}
 

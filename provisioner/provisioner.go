@@ -83,7 +83,7 @@ func (p *Provisioner) Run(ctx context.Context) error {
 	return nil
 }
 
-func (p *Provisioner) Authenticate(token string) {
+func (p *Provisioner) authenticate(token string) {
 	for _, client := range p.vaultClients {
 		client.SetToken(token)
 	}
