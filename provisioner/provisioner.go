@@ -70,15 +70,13 @@ func New(
 }
 
 func (p *Provisioner) Run(ctx context.Context) error {
-	if p.unsealOpt.Enabled {
-		slog.Info("Starting unseal process")
+	slog.Info("Starting unseal process")
 
-		if err := p.Unseal(ctx); err != nil {
-			return err
-		}
-
-		slog.Info("Unseal process completed")
+	if err := p.Unseal(ctx); err != nil {
+		return err
 	}
+
+	slog.Info("Unseal process completed")
 
 	return nil
 }

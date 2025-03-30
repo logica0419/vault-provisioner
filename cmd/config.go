@@ -43,7 +43,6 @@ func init() {
 		"Namespace of the Vault Instance. When empty, the namespace where the vault-provisioner is running is used.")
 	rootCmd.PersistentFlags().Int("vault.port", 8200, "Port of the Vault Instance")
 
-	rootCmd.PersistentFlags().Bool("provisionings.unseal.enabled", true, "Enables the unseal process")
 	rootCmd.PersistentFlags().Int("provisionings.unseal.share", 5,
 		"Number of key shares to split the generated master key into")
 	rootCmd.PersistentFlags().Int("provisionings.unseal.threshold", 3,

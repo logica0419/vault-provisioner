@@ -13,6 +13,8 @@ linters:
   settings:
     cyclop:
       max-complexity: 15
+    funlen:
+      lines: 100
     revive:
       rules:
         - name: package-comments
