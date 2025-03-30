@@ -70,15 +70,9 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 
 	p.authenticate(rootToken)
 
-	for i := range p.vaultClients {
-		if !sealedStatus[i] {
-			continue
-		}
-
-		err = p.unsealSingleInstance(ctx, i, keys)
-		if err != nil {
-			return err
-		}
+	err = p.unsealAllInstances(ctx, sealedStatus, keys)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -147,6 +141,21 @@ func (p *Provisioner) unsealSingleInstance(ctx context.Context, idx int, keys []
 	}
 
 	slog.Info("Unsealed Vault", slog.Int("instance", idx))
+
+	return nil
+}
+
+func (p *Provisioner) unsealAllInstances(ctx context.Context, sealedStatus []bool, keys []string) error {
+	for i := range p.vaultClients {
+		if !sealedStatus[i] {
+			continue
+		}
+
+		err := p.unsealSingleInstance(ctx, i, keys)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
