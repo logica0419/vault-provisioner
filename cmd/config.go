@@ -62,7 +62,8 @@ func init() {
 			viper.SetConfigName("config")
 		}
 
-		if err := viper.ReadInConfig(); err != nil {
+		err := viper.ReadInConfig()
+		if err != nil {
 			if errors.Is(err, viper.ConfigFileNotFoundError{}) {
 				log.Panic(err)
 			}
@@ -72,11 +73,13 @@ func init() {
 		viper.SetEnvPrefix("VP")
 		viper.AutomaticEnv()
 
-		if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
+		err = viper.BindPFlags(rootCmd.PersistentFlags())
+		if err != nil {
 			log.Panic(err)
 		}
 
-		if err := viper.Unmarshal(&config); err != nil {
+		err = viper.Unmarshal(&config)
+		if err != nil {
 			log.Panic(err)
 		}
 	})

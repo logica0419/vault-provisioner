@@ -72,7 +72,8 @@ func New(
 func (p *Provisioner) Run(ctx context.Context) error {
 	slog.Info("Starting unseal process")
 
-	if err := p.Unseal(ctx); err != nil {
+	err := p.Unseal(ctx)
+	if err != nil {
 		return err
 	}
 

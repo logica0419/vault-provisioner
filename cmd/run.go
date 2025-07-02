@@ -12,12 +12,7 @@ import (
 
 // nolint:ireturn
 func setupStorage() (storage.KeyStorage, error) {
-	var (
-		str storage.KeyStorage
-		err error
-	)
-
-	str, err = secret.NewStorage(config.Storage.Secret)
+	str, err := secret.NewStorage(config.Storage.Secret)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +38,8 @@ var runCmd = &cobra.Command{
 			panic(err)
 		}
 
-		if err := prov.Run(cmd.Context()); err != nil {
+		err = prov.Run(cmd.Context())
+		if err != nil {
 			slog.Error("failed to run provisioner", "error", err)
 			panic(err)
 		}
