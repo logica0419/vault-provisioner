@@ -70,14 +70,14 @@ func New(
 }
 
 func (p *Provisioner) Run(ctx context.Context) error {
-	slog.Info("Starting unseal process")
+	slog.InfoContext(ctx, "Starting unseal process")
 
 	err := p.Unseal(ctx)
 	if err != nil {
 		return err
 	}
 
-	slog.Info("Unseal process completed")
+	slog.InfoContext(ctx, "Unseal process completed")
 
 	return nil
 }

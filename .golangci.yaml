@@ -7,8 +7,10 @@ linters:
     - dogsled
     - exhaustruct
     - godot
+    - noinlineerr
     - nolintlint
     - wrapcheck
+    - wsl # deprecated
 
   settings:
     cyclop:

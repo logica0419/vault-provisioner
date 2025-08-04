@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -14,7 +15,7 @@ var clientSet *kubernetes.Clientset
 func init() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		slog.Warn("Failed to get in-cluster config")
+		slog.WarnContext(context.Background(), "Failed to get in-cluster config")
 
 		return
 	}

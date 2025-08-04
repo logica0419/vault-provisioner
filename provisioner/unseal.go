@@ -24,7 +24,7 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 	}
 
 	if !slices.Contains(sealedStatus, true) {
-		slog.Info("Vault is already unsealed")
+		slog.InfoContext(ctx, "Vault is already unsealed")
 
 		return nil
 	}
@@ -39,7 +39,7 @@ func (p *Provisioner) Unseal(ctx context.Context) error {
 			return err
 		}
 
-		slog.Info("Initialized Vault", slog.Int("instance", 0))
+		slog.InfoContext(ctx, "Initialized Vault", slog.Int("instance", 0))
 
 		initializedStatus[0] = true
 
@@ -92,7 +92,10 @@ func (p *Provisioner) getSealStatus(ctx context.Context) ([]bool, []bool, error)
 		sealedStatus[i] = res.Sealed
 	}
 
-	slog.Info("Retrieved seal status", slog.Any("initialized", initializedStatus), slog.Any("sealed_status", sealedStatus))
+	slog.InfoContext(ctx, "Retrieved seal status",
+		slog.Any("initialized", initializedStatus),
+		slog.Any("sealed_status", sealedStatus),
+	)
 
 	return initializedStatus, sealedStatus, nil
 }
@@ -120,7 +123,7 @@ func (p *Provisioner) joinAllInstances(ctx context.Context, initializedStatus []
 			return err
 		}
 
-		slog.Info("Joined Vault", slog.Int("instance", i))
+		slog.InfoContext(ctx, "Joined Vault", slog.Int("instance", i))
 
 		initializedStatus[i] = true
 	}
@@ -140,7 +143,7 @@ func (p *Provisioner) unsealSingleInstance(ctx context.Context, idx int, keys []
 		}
 	}
 
-	slog.Info("Unsealed Vault", slog.Int("instance", idx))
+	slog.InfoContext(ctx, "Unsealed Vault", slog.Int("instance", idx))
 
 	return nil
 }
