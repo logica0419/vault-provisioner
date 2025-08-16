@@ -38,6 +38,11 @@
       "description": "Auto merge digest & pin",
       "matchUpdateTypes": ["digest", "pin", "pinDigest"],
       "automerge": true
+    },
+    {
+      "description": "Disable updates for k8s.io/kube-openapi",
+      "matchPackageNames": ["k8s.io/kube-openapi"],
+      "enabled": false
     }
   ]
 }
