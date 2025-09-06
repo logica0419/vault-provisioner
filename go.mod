@@ -3,7 +3,7 @@ module github.com/logica0419/vault-provisioner
 go 1.24.1
 
 require (
-	github.com/bytedance/sonic v1.14.0
+	github.com/bytedance/sonic v1.14.1
 	github.com/hashicorp/vault/api v1.20.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
