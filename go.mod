@@ -6,7 +6,7 @@ require (
 	github.com/bytedance/sonic v1.14.1
 	github.com/hashicorp/vault/api v1.20.0
 	github.com/spf13/cobra v1.10.1
-	github.com/spf13/viper v1.20.1
+	github.com/spf13/viper v1.21.0
 	k8s.io/api v0.34.0
 	k8s.io/apimachinery v0.34.0
 	k8s.io/client-go v0.34.0
