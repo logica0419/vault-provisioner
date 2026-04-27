@@ -3,7 +3,7 @@ module github.com/logica0419/vault-provisioner
 go 1.26.0
 
 require (
-	github.com/bytedance/sonic v1.15.0
+	github.com/bytedance/sonic v1.15.1
 	github.com/hashicorp/vault/api v1.23.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
